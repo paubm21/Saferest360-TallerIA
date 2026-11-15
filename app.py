@@ -1,3 +1,6 @@
+from hashlib import sha256
+from importlib.util import find_spec
+
 from PIL import Image, ImageOps
 import streamlit as st
 
@@ -10,6 +13,53 @@ def mostrar_foto(archivo):
             st.image(vista.convert("RGB"), caption=archivo.name)
     except (OSError, Image.DecompressionBombError):
         st.error("No se pudo abrir la foto. Selecciona otro archivo JPG o PNG.")
+        return False
+    return True
+
+
+@st.cache_resource
+def cargar_clasificador():
+    from src.vision import ClasificadorZona
+
+    return ClasificadorZona()
+
+
+def mostrar_prediccion(datos_foto):
+    st.subheader("Predicción del modelo")
+    if find_spec("src.vision") is None:
+        st.info("La predicción estará disponible cuando se integre el modelo entrenado.")
+        return
+
+    huella = sha256(datos_foto).digest()
+    ultima_prediccion = st.session_state.get("prediccion_directa")
+    if ultima_prediccion is None or ultima_prediccion[0] != huella:
+        try:
+            from src.vision import leer_imagen_bgr
+
+            with st.spinner("Analizando la foto…"):
+                imagen = leer_imagen_bgr(datos_foto)
+                if imagen is None:
+                    st.error("El modelo no pudo leer la foto. Prueba con otro archivo.")
+                    return
+                resultado = cargar_clasificador().predecir(imagen)
+        except FileNotFoundError:
+            st.warning("Faltan los archivos del modelo entrenado.")
+            return
+        except ImportError:
+            st.warning("Instala las dependencias de visión para activar la predicción.")
+            return
+        except (OSError, ValueError):
+            st.error("No se pudo obtener la predicción. Revisa la foto y el modelo.")
+            return
+
+        ultima_prediccion = huella, resultado
+        st.session_state["prediccion_directa"] = ultima_prediccion
+
+    _, resultado = ultima_prediccion
+    estado, confianza = st.columns(2)
+    estado.metric("Estado", resultado["estado"].capitalize())
+    confianza.metric("Confianza", f"{resultado['confianza']:.1%}")
+    st.caption(f"Modelo: {resultado['modelo']}")
 
 
 def main():
@@ -25,8 +75,7 @@ def main():
             type=["jpg", "jpeg", "png"],
             help="Usa una foto en la que se vea la zona seleccionada.",
         )
-        if archivo is not None:
-            mostrar_foto(archivo)
+        foto_valida = archivo is not None and mostrar_foto(archivo)
 
     with detalles:
         st.subheader("Datos de la inspección")
@@ -44,7 +93,8 @@ def main():
                 help="Completa este dato si sabes cuánto tiempo lleva vacía.",
             )
 
-    st.info("La clasificación estará disponible cuando se conecte el modelo entrenado.")
+    if foto_valida:
+        mostrar_prediccion(archivo.getvalue())
 
 
 if __name__ == "__main__":
