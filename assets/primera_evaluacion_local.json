@@ -1,0 +1,58 @@
+{
+  "estado": "COMPLETA",
+  "fecha_utc": "2026-11-19T06:40:30.446477+00:00",
+  "modelo": "gemini-3.5-flash-lite",
+  "casos_ejecutados": 4,
+  "casos_esperados": 4,
+  "trayectorias_correctas": 3,
+  "resultados_correctos": 4,
+  "filas": [
+    {
+      "caso": "Saludo",
+      "esperadas": [],
+      "invocadas": [],
+      "trayectoria_ok": true,
+      "confianza_transmitida_ok": null,
+      "resultado_ok": true,
+      "respuesta": "¡Hola! Qué gusto saludarte, lote Aliso. ¿En qué te puedo ayudar hoy con la digitalización de tus formularios?"
+    },
+    {
+      "caso": "Lectura",
+      "esperadas": [
+        "leer_digito"
+      ],
+      "invocadas": [
+        "leer_digito",
+        "aplicar_regla"
+      ],
+      "trayectoria_ok": false,
+      "confianza_transmitida_ok": null,
+      "resultado_ok": true,
+      "respuesta": "Dígito: 2. Confianza: 57.95%. Decisión: REVISAR. Escalamiento: SEGUNDA_LECTURA (Confianza baja: dos lecturas humanas independientes; resolver discrepancias.)."
+    },
+    {
+      "caso": "Inspección",
+      "esperadas": [
+        "leer_digito",
+        "aplicar_regla"
+      ],
+      "invocadas": [
+        "leer_digito",
+        "aplicar_regla"
+      ],
+      "trayectoria_ok": true,
+      "confianza_transmitida_ok": true,
+      "resultado_ok": true,
+      "respuesta": "Dígito: 2. Confianza: 57.95%. Decisión: REVISAR. Escalamiento: SEGUNDA_LECTURA (Confianza baja: dos lecturas humanas independientes; resolver discrepancias)."
+    },
+    {
+      "caso": "Memoria",
+      "esperadas": [],
+      "invocadas": [],
+      "trayectoria_ok": true,
+      "confianza_transmitida_ok": null,
+      "resultado_ok": true,
+      "respuesta": "Me indicaste que tu lote se llama Aliso."
+    }
+  ]
+}

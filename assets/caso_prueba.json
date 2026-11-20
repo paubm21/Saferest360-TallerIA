@@ -1,0 +1,8 @@
+{
+  "dataset": "sklearn.load_digits",
+  "indice": 1149,
+  "etiqueta_real": 8,
+  "digito": 2,
+  "confianza_pct": 57.95,
+  "variante": "Dropout"
+}

@@ -1,0 +1,20 @@
+# Funciones de referencia de U5, anteriores a la corrección del prompt.
+
+def normalizar(texto):
+    limpio = unicodedata.normalize("NFKD", texto.casefold())
+    return "".join(ch for ch in limpio if not unicodedata.combining(ch)).replace("*", "")
+
+def resultado_correcto(nombre, respuesta):
+    frase = normalizar(respuesta)
+    if nombre == "Saludo":
+        return bool(re.search(r"\b(hola|saludos|buen[oa]s?|bienvenid[oa])\b", frase))
+    if nombre == "Memoria":
+        return bool(re.search(r"\baliso\b", frase))
+    digito = re.search(r"digito\s*(?:(?:es|predicho)\s*)?[:=]?\s*(\d)\b", frase)
+    porcentaje = re.search(r"(\d+(?:[.,]\d+)?)\s*%", frase)
+    lectura_ok = bool(digito and int(digito[1]) == referencia["digito"] and porcentaje
+                      and abs(float(porcentaje[1].replace(",", ".")) - referencia["confianza_pct"]) <= 0.05)
+    if nombre == "Lectura":
+        return lectura_ok
+    decision_final = re.search(r"decision\s*[:=]\s*(aceptar|revisar)\b", frase)
+    return lectura_ok and bool(decision_final and decision_final[1] == accion.casefold())
