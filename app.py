@@ -1,101 +1,94 @@
-from hashlib import sha256
-from importlib.util import find_spec
+"""Ejecuta python app.py desde la raíz del proyecto."""
+import logging
+from uuid import uuid4
 
-from PIL import Image, ImageOps
-import streamlit as st
+import gradio as gr
+import numpy as np
+import uvicorn
+from fastapi import FastAPI
+from PIL import Image
+
+from src.agente import consultar, olvidar
+from src.modelo import RAIZ, predecir
 
 
-def mostrar_foto(archivo):
+def nuevo_hilo():
+    return str(uuid4())
+
+
+def ejemplo():
+    with Image.open(RAIZ / "assets" / "caso_prueba.png") as archivo:
+        ampliada = archivo.convert("RGB").resize((192, 192), Image.Resampling.NEAREST)
+        return np.asarray(ampliada)
+
+
+def lectura(imagen):
+    if imagen is None:
+        return "Carga una imagen para ver su lectura."
     try:
-        with Image.open(archivo, formats=("JPEG", "PNG")) as foto:
-            vista = ImageOps.exif_transpose(foto)
-            vista.thumbnail((1200, 900))
-            st.image(vista.convert("RGB"), caption=archivo.name)
-    except (OSError, Image.DecompressionBombError):
-        st.error("No se pudo abrir la foto. Selecciona otro archivo JPG o PNG.")
-        return False
-    return True
+        resultado = predecir(imagen)
+    except ValueError as exc:
+        return str(exc)
+    return f"**Dígito {resultado['digito']}** · Confianza {resultado['confianza_pct']:.2f} %"
 
 
-@st.cache_resource
-def cargar_clasificador():
-    from src.vision import ClasificadorZona
-
-    return ClasificadorZona()
-
-
-def mostrar_prediccion(datos_foto):
-    st.subheader("Predicción del modelo")
-    if find_spec("src.vision") is None:
-        st.info("La predicción estará disponible cuando se integre el modelo entrenado.")
-        return
-
-    huella = sha256(datos_foto).digest()
-    ultima_prediccion = st.session_state.get("prediccion_directa")
-    if ultima_prediccion is None or ultima_prediccion[0] != huella:
-        try:
-            from src.vision import leer_imagen_bgr
-
-            with st.spinner("Analizando la foto…"):
-                imagen = leer_imagen_bgr(datos_foto)
-                if imagen is None:
-                    st.error("El modelo no pudo leer la foto. Prueba con otro archivo.")
-                    return
-                resultado = cargar_clasificador().predecir(imagen)
-        except FileNotFoundError:
-            st.warning("Faltan los archivos del modelo entrenado.")
-            return
-        except ImportError:
-            st.warning("Instala las dependencias de visión para activar la predicción.")
-            return
-        except (OSError, ValueError):
-            st.error("No se pudo obtener la predicción. Revisa la foto y el modelo.")
-            return
-
-        ultima_prediccion = huella, resultado
-        st.session_state["prediccion_directa"] = ultima_prediccion
-
-    _, resultado = ultima_prediccion
-    estado, confianza = st.columns(2)
-    estado.metric("Estado", resultado["estado"].capitalize())
-    confianza.metric("Confianza", f"{resultado['confianza']:.1%}")
-    st.caption(f"Modelo: {resultado['modelo']}")
+def responder(pregunta, imagen, historial, hilo):
+    pregunta = pregunta.strip()
+    if not pregunta:
+        raise gr.Error("Escribe una pregunta para el agente.")
+    try:
+        respuesta, llamadas = consultar(pregunta, imagen, hilo)
+    except RuntimeError as exc:
+        if "Configura GOOGLE_API_KEY" in str(exc):
+            raise gr.Error(str(exc)) from None
+        raise gr.Error("El agente no pudo completar el turno. Reinicia la conversación y reintenta.") from None
+    except Exception as exc:
+        logging.warning("Fallo de consulta: %s", type(exc).__name__)
+        raise gr.Error("Consulta interrumpida. Comprueba conexión, modelo y cuota de Gemini.") from None
+    historial = [*(historial or []), {"role": "user", "content": pregunta},
+                 {"role": "assistant", "content": respuesta}]
+    traza = " → ".join(
+        f"{c['nombre']}({', '.join(f'{k}={v}' for k, v in c['argumentos'].items())})"
+        for c in llamadas
+    ) or "Ninguna"
+    return historial, traza, ""
 
 
-def main():
-    st.set_page_config(page_title="SafeRest 360 · Vigía de zonas", layout="wide")
-    st.title("SafeRest 360 · Vigía de zonas")
+def reiniciar(hilo):
+    olvidar(hilo)
+    return nuevo_hilo(), [], "Sin turnos", ""
 
-    foto, detalles = st.columns([3, 2])
 
-    with foto:
-        st.subheader("Foto de la zona")
-        archivo = st.file_uploader(
-            "Sube una imagen JPG o PNG",
-            type=["jpg", "jpeg", "png"],
-            help="Usa una foto en la que se vea la zona seleccionada.",
-        )
-        foto_valida = archivo is not None and mostrar_foto(archivo)
-
-    with detalles:
-        st.subheader("Datos de la inspección")
-        zona = st.selectbox(
-            "Zona", ("bodega", "caja", "cocina"), format_func=str.capitalize, key="zona"
-        )
-        st.time_input("Hora de la foto", value=None, step=60, key="hora")
-        if zona in ("caja", "cocina"):
-            st.number_input(
-                "Minutos que lleva sola la zona",
-                min_value=0,
-                value=None,
-                step=1,
-                key=f"minutos_{zona}",
-                help="Completa este dato si sabes cuánto tiempo lleva vacía.",
-            )
-
-    if foto_valida:
-        mostrar_prediccion(archivo.getvalue())
+def interfaz():
+    with gr.Blocks(title="Lector de casillas") as demo:
+        gr.Markdown("# Lector de casillas\nPrototipo educativo con dígitos de 8 × 8. "
+                    "Su desempeño en formularios reales no ha sido validado.")
+        hilo = gr.State(value=nuevo_hilo, time_to_live=3600, delete_callback=olvidar)
+        with gr.Row():
+            with gr.Column(scale=2):
+                imagen = gr.Image(type="numpy", image_mode="RGB", format="png", sources=["upload"],
+                                  label="Recorte de un solo dígito", height=230)
+                cargar = gr.Button("Cargar el caso de prueba")
+                gr.Markdown("### Lectura directa de la CNN")
+                directa = gr.Markdown(lectura(None))
+            with gr.Column(scale=3):
+                chat = gr.Chatbot(label="Agente de inspección", height=265)
+                pregunta = gr.Textbox(label="Pregunta", max_lines=3,
+                                      placeholder="Lee la casilla y decide si necesita revisión.")
+                with gr.Row():
+                    enviar = gr.Button("Consultar", variant="primary")
+                    reset = gr.Button("Reiniciar conversación")
+                traza = gr.Textbox(value="Sin turnos", label="Herramientas del último turno",
+                                   interactive=False)
+        cargar.click(ejemplo, outputs=imagen)
+        imagen.change(lectura, imagen, directa)
+        gr.on([enviar.click, pregunta.submit], responder, [pregunta, imagen, chat, hilo],
+              [chat, traza, pregunta], concurrency_limit=1)
+        reset.click(reiniciar, hilo, [hilo, chat, traza, pregunta])
+    return demo
 
 
 if __name__ == "__main__":
-    main()
+    # La aplicación se sirve en la interfaz de bucle local del equipo.
+    web = gr.mount_gradio_app(FastAPI(), interfaz(), path="/")
+    uvicorn.run(web, host="127.0.0.1", port=7860, log_level="warning")
