@@ -148,6 +148,16 @@ La interfaz muestra las llamadas del turno, no suma las de toda la conversación
 
 Durante el Vibe Coding consultamos a la IA para aclarar conceptos, como la diferencia entre la trayectoria de herramientas y el resultado de un turno. Comprobamos ambos aspectos por separado al comparar las llamadas registradas con la respuesta que recibió el operador. [Evaluación del agente](notebooks/evaluacion_agente_u5.ipynb)
 
+### Capturas de la conversación con IA
+
+En esta conversación reconstruimos el flujo del taller, desde la preparación del entorno hasta la evaluación del agente. Las capturas se pueden consultar directamente en el repositorio. [Conversación en ChatGPT](https://chatgpt.com/c/6aff7246-472c-83e8-992e-4aaf823275c0)
+
+- [Estructura del proyecto y flujo de lectura de una casilla](assets/bitacora/estructura.png)
+- [Dependencias del entrenamiento, el agente y la interfaz](assets/bitacora/entorno.png)
+- [Preprocesamiento de la imagen, carga de los pesos y predicción](assets/bitacora/inferencia.png)
+- [Integración de Gemini y memoria por hilo](assets/bitacora/gemini-memoria.png)
+- [Diseño de los cuatro turnos para evaluar herramientas y respuestas](assets/bitacora/evaluacion.png)
+
 ### Interpretación de los resultados
 
 En el caso 1662, la CNN leyó un 5 donde la etiqueta indica un 9. Su confianza fue del 89,55 %. Con la regla del taller, un operador revisaría esa casilla. Si el umbral de aceptación se fijara por debajo de esa confianza, esa misma lectura se aceptaría con el dígito equivocado. Este ejemplo muestra qué se arriesga al reducir la carga de revisión. Para elegir el umbral en un formulario real harían falta ejemplos de ese formulario y una estimación del costo de corregir un dato después de registrarlo. [Errores del conjunto de prueba](notebooks/entrenamiento_u4.ipynb)
