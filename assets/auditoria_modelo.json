@@ -1,0 +1,64 @@
+{
+  "alcance": "Auditoría de inferencia sobre los pesos exportados por U4.",
+  "python": "3.12.14",
+  "versiones": {
+    "keras": "3.12.0",
+    "jax": "0.6.2",
+    "numpy": "2.2.6",
+    "scikit-learn": "1.7.2",
+    "pillow": "13.0.0"
+  },
+  "sha256_modelo": "30cd4955abb2bbcbbe8be095cd9bc7f89671ed02cc6e42eb61259d7ff52e2ea0",
+  "particiones": {
+    "entrenamiento": 1257,
+    "validacion": 270,
+    "prueba": 270
+  },
+  "particiones_disjuntas": true,
+  "aciertos": 268,
+  "total": 270,
+  "exactitud": 0.9925925925925926,
+  "errores": [
+    {
+      "indice": 1149,
+      "real": 8,
+      "predicho": 2,
+      "confianza_pct": 57.95
+    },
+    {
+      "indice": 1662,
+      "real": 9,
+      "predicho": 5,
+      "confianza_pct": 89.55
+    }
+  ],
+  "lecturas_bajo_90": 11,
+  "errores_bajo_90": 2,
+  "aciertos_bajo_90": 9,
+  "interpolacion_caso": [
+    {
+      "interpolacion": "original",
+      "tamano": 8,
+      "digito": 2,
+      "confianza_pct": 57.95
+    },
+    {
+      "interpolacion": "vecino_mas_cercano",
+      "tamano": 192,
+      "digito": 2,
+      "confianza_pct": 57.95
+    },
+    {
+      "interpolacion": "vecino_mas_cercano",
+      "tamano": 256,
+      "digito": 2,
+      "confianza_pct": 57.95
+    },
+    {
+      "interpolacion": "bicubica",
+      "tamano": 256,
+      "digito": 7,
+      "confianza_pct": 39.59
+    }
+  ]
+}
