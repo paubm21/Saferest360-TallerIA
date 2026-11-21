@@ -146,11 +146,11 @@ La interfaz muestra las llamadas del turno, no suma las de toda la conversación
 
 ## 5. Bitácora de Vibe Coding y verificación
 
-Durante el Vibe Coding consultamos a la IA para aclarar conceptos, como la diferencia entre la trayectoria de herramientas y el resultado de un turno. Comprobamos ambos aspectos por separado al comparar las llamadas registradas con la respuesta que recibió el operador. [Evaluación del agente](notebooks/evaluacion_agente_u5.ipynb)
+**Declaración de uso de IA.** Usamos la IA para aclarar conceptos, diseñar la estructura del programa, programar sus componentes y preparar el código de entrenamiento de las dos redes neuronales. Ejecutamos el entrenamiento en nuestro equipo y comparamos las curvas y la pérdida de validación para elegir el modelo. Para evaluar el agente, revisamos tanto las herramientas que llamó como la respuesta que recibió el operador. [Entrenamiento de la CNN](notebooks/entrenamiento_u4.ipynb) · [Evaluación del agente](notebooks/evaluacion_agente_u5.ipynb)
 
 ### Capturas de la conversación con IA
 
-En esta conversación reconstruimos el flujo del taller, desde la preparación del entorno hasta la evaluación del agente. Las capturas se pueden consultar directamente en el repositorio. [Conversación en ChatGPT](https://chatgpt.com/c/6aff7246-472c-83e8-992e-4aaf823275c0)
+En esta conversación reconstruimos el flujo del taller, desde la preparación del entorno hasta la evaluación del agente. Las capturas se pueden consultar directamente en el repositorio. [Conversación compartida en ChatGPT](https://chatgpt.com/share/6b01063b-5a64-83e9-97ad-ac889696bf56)
 
 - [Estructura del proyecto y flujo de lectura de una casilla](assets/bitacora/estructura.png)
 - [Dependencias del entrenamiento, el agente y la interfaz](assets/bitacora/entorno.png)
@@ -175,7 +175,9 @@ El caso 1149 permite evaluar dos partes del sistema con referencias distintas. E
 
 ## 6. Demostración en Gradio
 
-[Ver la demostración local de 46 segundos](assets/demo-gradio.mp4). El video reúne capturas consecutivas de una sesión real de la app en Windows con Gemini. Muestra el saludo, la lectura del caso 1149, la inspección, el recuerdo de «Aliso» y el reinicio. En el turno de inspección se observa el argumento de la segunda herramienta y la decisión de remitir la casilla a una segunda lectura humana.
+[Ver el video de la aplicación en YouTube](https://youtu.be/jE12zksz3CU) · [Ver la demostración local de 46 segundos](assets/demo-gradio.mp4)
+
+El video reúne capturas consecutivas de una sesión real de la app en Windows con Gemini. Muestra el saludo, la lectura del caso 1149, la inspección, el recuerdo de «Aliso» y el reinicio. En el turno de inspección se observa el argumento de la segunda herramienta y la decisión de remitir la casilla a una segunda lectura humana.
 
 ![Inspección en Gradio con las dos herramientas, el porcentaje y la decisión](assets/demo-inspeccion.png)
 
